@@ -8,6 +8,12 @@
 
 #import <UIKit/UIKit.h>
 
+
+typedef enum : NSUInteger {
+    RJBDrawViewTypeLine,   //直线
+    RJBDrawViewTypeCurve,   //曲线
+} RJBDrawViewType;
+
 @interface RJBDrawView : UIView
 
 
@@ -27,7 +33,15 @@
 /** 绘制折线图
  nameArr:  名称数组
  valueArr: 数值数组
+ type:  连接线  是曲线 还是直线
  */
-- (void)rjb_lineBarChartWithNameArr:(NSArray *)nameArr valueArr:(NSArray *)valueArr;
+- (void)rjb_lineChartWithNameArr:(NSArray *)nameArr valueArr:(NSArray *)valueArr type:(RJBDrawViewType)type;
+
+
+/** 绘制扇形图
+ nameArr:  名称数组
+ valueArr: 数值数组
+ */
+- (void)rjb_lineFanChartWithNameArr:(NSArray *)nameArr valueArr:(NSArray *)valueArr;
 
 @end

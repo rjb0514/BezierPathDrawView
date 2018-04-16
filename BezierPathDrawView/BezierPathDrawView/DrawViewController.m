@@ -31,13 +31,54 @@
     self.drawView.center = self.view.center;
     
     
+    switch (self.drawType) {
+        case DrawViewTypePieChart:
+        {
+            //饼状图
+            [self.drawView rjb_drawPieChartWithNameArr:self.nameArr valueArr:self.valueArr];
+        }
+            break;
+        case DrawViewTypeBarChart:
+        {
+            //柱状图
+            [self.drawView rjb_drawBarChartWithNameArr:self.nameArr valueArr:self.valueArr];
+            
+        }
+            break;
+        case DrawViewTypeLineChart:
+        {
+            //折线图
+            [self.drawView rjb_lineChartWithNameArr:self.nameArr valueArr:self.valueArr type:RJBDrawViewTypeLine];
+        }
+            break;
+        case DrawViewTypeLineChartCurve:
+        {
+            //折线图-曲线
+            [self.drawView rjb_lineChartWithNameArr:self.nameArr valueArr:self.valueArr type:RJBDrawViewTypeCurve];
+            
+        }
+            break;
+        case DrawViewTypeFanChar:
+        {
+            //扇形图
+            [self.drawView rjb_lineFanChartWithNameArr:self.nameArr valueArr:self.valueArr];
+            
+        }
+            break;
+            
+        default:
+            break;
+    }
+    
   
     
 }
 
 - (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
 //      [self.drawView rjb_drawPieChartWithNameArr:self.nameArr valueArr:self.valueArr];
-    [self.drawView rjb_drawBarChartWithNameArr:self.nameArr valueArr:self.valueArr];
+//    [self.drawView rjb_drawBarChartWithNameArr:self.nameArr valueArr:self.valueArr];
+//    [self.drawView rjb_lineBarChartWithNameArr:self.nameArr valueArr:self.valueArr];
+    [self.drawView rjb_lineFanChartWithNameArr:self.nameArr valueArr:self.valueArr];
 }
 
 #pragma mark -  lazy

@@ -26,6 +26,8 @@
     
     [self.view addSubview:self.tableView];
     
+    
+    
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
@@ -47,6 +49,9 @@
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     
     DrawViewController *VC = [[DrawViewController alloc] init];
+    
+    VC.drawType = indexPath.row;
+    
     [self.navigationController pushViewController:VC animated:YES];
     
 }
@@ -67,7 +72,7 @@
 
 - (NSArray<NSString *> *)modelList {
     if (!_modelList) {
-        _modelList = @[@"饼状图",@"条状图",@"扇形图"];
+        _modelList = @[@"饼状图",@"柱状图",@"折线图--直线",@"折线图--曲线",@"扇形图"];
     }
     return _modelList;
 }

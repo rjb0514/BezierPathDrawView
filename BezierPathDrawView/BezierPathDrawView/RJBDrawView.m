@@ -14,6 +14,9 @@
 
 @implementation RJBDrawView
 
+
+#pragma mark - 绘制饼状图
+
 /** 绘制饼状图
  nameArr:  名称数组
  valueArr: 数值数组
@@ -78,7 +81,7 @@
     
 }
 
-
+#pragma mark - 绘制柱状图
 
 /** 绘制柱状图
  nameArr:  名称数组
@@ -113,21 +116,182 @@
     
     
 }
-
+#pragma mark - 绘制折线图
 
 /** 绘制折线图
  nameArr:  名称数组
  valueArr: 数值数组
+ type:  连接线  是曲线 还是直线
  */
-- (void)rjb_lineBarChartWithNameArr:(NSArray *)nameArr valueArr:(NSArray *)valueArr {
+- (void)rjb_lineChartWithNameArr:(NSArray *)nameArr valueArr:(NSArray *)valueArr type:(RJBDrawViewType)type{
     
     [self drawAxes:nameArr];
+    
+    
+    NSMutableArray *pointArr = [NSMutableArray array];
+    
+    //2.每一个目标值点坐标
+    [valueArr enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        CGFloat doubleValue = 2*[valueArr[idx] floatValue]; //目标值放大两倍
+        CGFloat X = RJBX_MARGIN + RJBX_MARGIN*(idx+1)+5;
+        CGFloat Y = CGRectGetHeight(self.frame)-RJBY_MARGIN-doubleValue;
+        CGPoint point = CGPointMake(X,Y);
+        UIBezierPath *path = [UIBezierPath bezierPathWithRoundedRect:CGRectMake(X - 2.5, Y - 2.5, 5, 5) cornerRadius:2.5];
+        CAShapeLayer *shapeLayer = [CAShapeLayer layer];
+        shapeLayer.path = path.CGPath;
+        shapeLayer.strokeColor = [UIColor clearColor].CGColor;
+        shapeLayer.fillColor =  [UIColor colorWithRed:((float)arc4random_uniform(256) / 255.0) green:((float)arc4random_uniform(256) / 255.0) blue:((float)arc4random_uniform(256) / 255.0) alpha:1.0].CGColor;;
+        shapeLayer.borderWidth = 2.0;
+        [self.layer addSublayer:shapeLayer];
+        [pointArr addObject:[NSValue valueWithCGPoint:point]];
+        
+        
+        //3.添加文字
+        UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(X-RJBX_MARGIN/2, Y-20, RJBX_MARGIN-10, 20)];
+        label.text = [NSString stringWithFormat:@"%.0lf",(CGRectGetHeight(self.frame)-Y-RJBX_MARGIN)/2];
+        label.textColor = [UIColor purpleColor];
+        label.textAlignment = NSTextAlignmentCenter;
+        label.font = [UIFont systemFontOfSize:10];
+        [self addSubview:label];
+    }];
+    
+    
+    //绘制直线或者曲线
+    UIBezierPath *path = [UIBezierPath bezierPath];
+    [path moveToPoint:[pointArr[0] CGPointValue]];
+    [pointArr enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+
+        
+        if (type == RJBDrawViewTypeLine) {
+            //直线
+            CGPoint point = [pointArr[idx] CGPointValue];
+            [path addLineToPoint:point];
+        }else {
+            //曲线
+            static CGPoint PrePonit ;
+            if (idx == 0) {
+                PrePonit = [obj CGPointValue];
+            }else{
+                CGPoint NowPoint = [obj CGPointValue];
+                [path addCurveToPoint:NowPoint controlPoint1:CGPointMake((PrePonit.x+NowPoint.x)/2, PrePonit.y) controlPoint2:CGPointMake((PrePonit.x+NowPoint.x)/2, NowPoint.y)]; //三次曲线
+                PrePonit = NowPoint;
+            }
+        }
+      
+    }];
+    
+    
+    //for 循环 和 Block 遍历的 局部变量要注意 释放问题
+    
+//    for (NSInteger idx = 0; idx < pointArr.count; idx++) {
+//        //曲线
+//         CGPoint PrePonit ;
+//        if (idx == 0) {
+//            PrePonit = [pointArr[idx] CGPointValue];
+//        }else{
+//            CGPoint NowPoint = [pointArr[idx] CGPointValue];
+//            [path addCurveToPoint:NowPoint controlPoint1:CGPointMake((PrePonit.x+NowPoint.x)/2, PrePonit.y) controlPoint2:CGPointMake((PrePonit.x+NowPoint.x)/2, NowPoint.y)]; //三次曲线
+//            //            [path addCurveToPoint:NowPoint controlPoint1:CGPointMake(PrePonit.x+(NowPoint.x - PrePonit.x)/2, PrePonit.y) controlPoint2:CGPointMake(PrePonit.x+(NowPoint.x - PrePonit.x)/2, NowPoint.y)]; //三次曲线
+//            PrePonit = NowPoint;
+//        }
+//    }
+    
+    
+    
+    CAShapeLayer *shapeLayer = [CAShapeLayer layer];
+    shapeLayer.path = path.CGPath;
+    shapeLayer.strokeColor = [UIColor greenColor].CGColor;
+    shapeLayer.fillColor = [UIColor clearColor].CGColor;
+    shapeLayer.borderWidth = 2.0;
+    [self.layer addSublayer:shapeLayer];
+    
+}
+
+#pragma mark - 绘制扇形图
+/** 绘制扇形图
+ nameArr:  名称数组
+ valueArr: 数值数组
+ */
+- (void)rjb_lineFanChartWithNameArr:(NSArray *)nameArr valueArr:(NSArray *)valueArr {
+    
+    __block CGFloat sumValue = 0;
+    [valueArr enumerateObjectsUsingBlock:^(id  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        sumValue += [obj floatValue];
+    }];
+    
+//    NSArray<UIColor *> *colorArr = @[[UIColor redColor],[UIColor blueColor],[UIColor yellowColor]];
+    
+    
+    NSMutableArray<CAShapeLayer *> *layersArr = [NSMutableArray array];
+    
+    __block CGFloat start = 0;
+    [valueArr enumerateObjectsUsingBlock:^(NSString *obj, NSUInteger idx, BOOL * _Nonnull stop) {
+       
+        CGFloat end = obj.floatValue / sumValue * M_PI * 2 + start;
+        
+        CGPoint arcCenter = CGPointMake(self.frame.size.width / 2.0, self.frame.size.height / 2.0);
+        CGFloat radius = self.frame.size.width / 2.0 - 80;
+        
+        UIBezierPath *path = [UIBezierPath bezierPathWithArcCenter:arcCenter radius:radius startAngle:start endAngle:end clockwise:YES];
+        CAShapeLayer *shap = [CAShapeLayer layer];
+        shap.lineWidth = 80;
+        
+//        if (idx < colorArr.count) {
+//            shap.strokeColor = colorArr[idx].CGColor;
+//        }else {
+//            shap.strokeColor = [UIColor purpleColor].CGColor;
+//        }
+        shap.strokeColor =  [UIColor colorWithRed:((float)arc4random_uniform(256) / 255.0) green:((float)arc4random_uniform(256) / 255.0) blue:((float)arc4random_uniform(256) / 255.0) alpha:1.0].CGColor;
+        
+        shap.fillColor = [UIColor clearColor].CGColor;
+        shap.path = path.CGPath;
+        shap.strokeEnd = 0;
+        [self.layer addSublayer:shap];
+        [layersArr addObject:shap];
+        
+        //创建名称label
+        UILabel *nameLabel = [[UILabel alloc] init];
+        nameLabel.text = nameArr[idx];
+        nameLabel.textColor = [UIColor blackColor];
+        CGFloat x = arcCenter.x + (radius + 20) * cosf(start + (end - start)/2);
+        CGFloat y = arcCenter.y + (radius + 20) * sinf(start + (end - start)/2);
+        [nameLabel sizeToFit];
+        nameLabel.center = CGPointMake(x, y);
+        nameLabel.textAlignment = NSTextAlignmentCenter;
+        [self addSubview:nameLabel];
+        
+        
+        //这次的结束是下次的开始
+        start = end;
+        
+        
+        
+    }];
+    
+    
+    //动画
+    [layersArr enumerateObjectsUsingBlock:^(CALayer * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+       
+        //添加动画
+        CABasicAnimation *anima = [CABasicAnimation animationWithKeyPath:@"strokeEnd"];
+        anima.duration = 1.5;
+        anima.fromValue = @0;
+        anima.toValue = @1;
+        anima.removedOnCompletion = NO;
+        anima.fillMode = kCAFillModeForwards;
+        CFTimeInterval time =  [obj convertTime:CACurrentMediaTime() fromLayer:nil];
+        
+        anima.beginTime = time + 1.5 * idx;
+        
+        [obj addAnimation:anima forKey:nil];
+        
+    }];
+    
     
     
     
     
 }
-
 
 /** 绘制坐标轴 */
 - (void)drawAxes:(NSArray *)nameArr {
@@ -197,12 +361,6 @@
     }
     
     
-    
-    
-    
-
-    
-    
     CAShapeLayer *shape = [CAShapeLayer layer];
     
     shape.lineWidth = 1;
@@ -212,8 +370,6 @@
     shape.path = bezier.CGPath;
     
     [self.layer addSublayer:shape];
-    
-    
     
 }
 
